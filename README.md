@@ -1,2 +1,17 @@
 # portfolio
 Portfolio and SEO-optimized landing pages for Chrome extensions (Key Jump, JobRizzer, and Quick Sender Search for Gmail), web projects (How to Start, Claude Lessons, and My GPT List), and startups (Yapmuch and GameClipper Advanced).
+
+## Redirect route
+
+Use https://bkzly.com/trez?source= followed by the output of JavaScript's
+`encodeURIComponent(destinationUrl)`. The destination must be an absolute HTTP
+or HTTPS URL. The route returns an HTTP 302 at Cloudflare's edge.
+
+In the Cloudflare dashboard, open **Workers & Pages → bkzly-trez →
+Observability → Logs** and search for `trez_visit` to see the IP and status
+for each request, along with its timestamp. Logs follow the Workers Logs
+retention period for the account's plan.
+
+The edge route is deployed separately from the portfolio container. To deploy
+an update with an authenticated Wrangler session, run
+`npx wrangler deploy --config cloudflare/wrangler.toml` from this directory.

@@ -1,0 +1,13 @@
+name = "bkzly-trez"
+main = "trez.mjs"
+compatibility_date = "2025-01-01"
+workers_dev = false
+preview_urls = false
+routes = [{ pattern = "bkzly.com/trez*", zone_name = "bkzly.com" }]
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+invocation_logs = false
