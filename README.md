@@ -9,6 +9,11 @@ or HTTPS URL. The route returns an HTTP 302 at Cloudflare's edge. For WhatsApp
 previews of YouTube Shorts on `www.youtube.com`, it uses the video title and
 thumbnail from YouTube. Those preview requests are logged as `trez_preview`.
 
+For a YouTube Short, share `https://bkzly.com/trez/youtube/<video-id>` to give
+preview clients a URL without a query string. Browser navigation requests
+receive a 302 to the Short. Other clients receive its preview metadata and
+a link to open it.
+
 In the Cloudflare dashboard, open **Workers & Pages → bkzly-trez →
 Observability → Logs** and search for `trez_visit` to see the IP and status
 for each request, along with its timestamp. Logs follow the Workers Logs

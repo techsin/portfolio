@@ -17,7 +17,7 @@ function escapeHtml(value) {
   return value.replace(/[&<>"']/g, (character) => entities[character]);
 }
 
-async function youTubePreview(videoId, target, requestUrl) {
+async function youTubePreview(videoId, target, requestUrl, refresh) {
   const metadataUrl = new URL("https://www.youtube.com/oembed");
   metadataUrl.searchParams.set("url", "https://www.youtube.com/watch?v=" + videoId);
   metadataUrl.searchParams.set("format", "json");
@@ -44,7 +44,7 @@ async function youTubePreview(videoId, target, requestUrl) {
 <meta property="og:description" content="${description}">
 <meta property="og:url" content="${escapeHtml(requestUrl.href)}">
 <meta property="og:image" content="${escapeHtml(thumbnail)}">
-<meta http-equiv="refresh" content="0; url=${destination}">
+${refresh ? `<meta http-equiv="refresh" content="0; url=${destination}">` : ""}
 </head>
 <body><a href="${destination}">Watch on YouTube</a></body>
 </html>`;
@@ -57,17 +57,24 @@ async function youTubePreview(videoId, target, requestUrl) {
 export default {
   async fetch(request) {
     const requestUrl = new URL(request.url);
-    if (requestUrl.pathname !== "/trez") {
+    const shareVideoId = requestUrl.pathname.match(/^\/trez\/youtube\/([\w-]{11})$/)?.[1];
+    if (requestUrl.pathname !== "/trez" && !shareVideoId) {
       return fetch(request);
     }
 
-    const target = redirectTarget(requestUrl);
-    const videoId = target?.origin === "https://www.youtube.com"
+    const target = shareVideoId
+      ? new URL("https://www.youtube.com/shorts/" + shareVideoId)
+      : redirectTarget(requestUrl);
+    const videoId = shareVideoId ?? (target?.origin === "https://www.youtube.com"
       ? target.pathname.match(/^\/shorts\/([\w-]{11})\/?$/)?.[1]
-      : null;
-    const wantsPreview = videoId && /^WhatsApp\//i.test(request.headers.get("User-Agent") ?? "")
+      : null);
+    const browserNavigation = request.headers.get("Sec-Fetch-Mode") === "navigate"
+      || request.headers.get("Sec-Fetch-Dest") === "document"
+      || request.headers.get("Sec-Fetch-User") === "?1";
+    const acceptsPreview = shareVideoId || /^WhatsApp\//i.test(request.headers.get("User-Agent") ?? "");
+    const wantsPreview = videoId && !browserNavigation && acceptsPreview
       && (request.method === "GET" || request.method === "HEAD");
-    const preview = wantsPreview ? await youTubePreview(videoId, target, requestUrl) : null;
+    const preview = wantsPreview ? await youTubePreview(videoId, target, requestUrl, !shareVideoId) : null;
     const status = preview ? 200 : target ? 302 : 400;
     console.log({
       event: preview ? "trez_preview" : "trez_visit",
@@ -78,7 +85,7 @@ export default {
     const headers = {
       "Cache-Control": "no-store",
       "Referrer-Policy": "no-referrer",
-      "Vary": "User-Agent",
+      "Vary": "User-Agent, Sec-Fetch-Mode, Sec-Fetch-Dest, Sec-Fetch-User",
     };
     let body = null;
     if (preview) {
