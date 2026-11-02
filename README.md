@@ -5,7 +5,9 @@ Portfolio and SEO-optimized landing pages for Chrome extensions (Key Jump, JobRi
 
 Use https://bkzly.com/trez?source= followed by the output of JavaScript's
 `encodeURIComponent(destinationUrl)`. The destination must be an absolute HTTP
-or HTTPS URL. The route returns an HTTP 302 at Cloudflare's edge.
+or HTTPS URL. The route returns an HTTP 302 at Cloudflare's edge. For WhatsApp
+previews of YouTube Shorts on `www.youtube.com`, it uses the video title and
+thumbnail from YouTube. Those preview requests are logged as `trez_preview`.
 
 In the Cloudflare dashboard, open **Workers & Pages → bkzly-trez →
 Observability → Logs** and search for `trez_visit` to see the IP and status
